@@ -16,8 +16,5 @@ defineProps({
         <p class="text-slate-400 text-2xl font-semibold">
             PHP: {{ php }}
         </p>
-        <p class="text-slate-400 text-2xl font-semibold">
-            Test text: {{ test }}
-        </p>
     </div>
 </template>
