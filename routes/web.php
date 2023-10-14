@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\ShoppingTypeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -42,5 +45,17 @@ Route::get('/test', function () {
         'test' => 'Tester'
     ]);
 });
+
+Route::resource('receipts', ReceiptController::class)
+    ->only(['index', 'store'])
+    ->middleware(['auth', 'verified']);
+
+Route::resource('shops', ShopController::class)
+    ->only(['index', 'store'])
+    ->middleware(['auth', 'verified']);
+
+Route::resource('shopping_types', ShoppingTypeController::class)
+    ->only(['index', 'store'])
+    ->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';
