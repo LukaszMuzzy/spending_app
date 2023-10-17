@@ -16,7 +16,8 @@ class Receipt extends Model
         'shop_id',
         'price',
         'note',
-        'date'
+        'date',
+        'shopping_group_id'
     ];
 
     public function user(): BelongsTo
@@ -38,4 +39,10 @@ class Receipt extends Model
     {
         return $this->belongsTo(Shop::class);
     }
+
+    public function shopping_group(): BelongsTo
+    {
+        return $this->belongsTo(ShoppingGroup::class);
+    }
+
 }

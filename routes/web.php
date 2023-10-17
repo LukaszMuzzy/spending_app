@@ -3,6 +3,7 @@
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShoppingTypeController;
+use App\Http\Controllers\ShoppingGroupController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,10 @@ Route::resource('shops', ShopController::class)
     ->middleware(['auth', 'verified']);
 
 Route::resource('shopping_types', ShoppingTypeController::class)
+    ->only(['index', 'store'])
+    ->middleware(['auth', 'verified']);
+
+Route::resource('shopping_groups', ShoppingGroupController::class)
     ->only(['index', 'store'])
     ->middleware(['auth', 'verified']);
 

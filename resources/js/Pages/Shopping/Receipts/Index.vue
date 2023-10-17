@@ -12,11 +12,12 @@ const form = useForm({
     shop_id: 1,
     price: 0,
     note: '',
-    date: dayjs().format('YYYY-MM-DD')
+    date: dayjs().format('YYYY-MM-DD'),
+    shopping_group_id: 1
 });
 
 
-defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops']);
+defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping_groups']);
 
 
 </script>
@@ -55,7 +56,7 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops']);
                                     rounded-md
                                     shadow-sm
                                     mx-2">
-                        <option disabled value="">Select your shopping</option>
+                        <option disabled value="">Shoping Group</option>
                         <option v-for="shopping_type in shopping_types" :value="shopping_type.id">{{ shopping_type.description }}</option>
                         </select>
                     </div>
@@ -107,6 +108,21 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops']);
                                     shadow-sm
                                     mx-2">
                         <option v-for="shop in shops" :value="shop.id">{{ shop.name }}</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <select  v-model="form.shopping_group_id" id="shopping_group_id"
+                            class=" block
+                                    border-gray-300
+                                    focus:border-indigo-300
+                                    focus:ring
+                                    focus:ring-indigo-200
+                                    focus:ring-opacity-50
+                                    rounded-md
+                                    shadow-sm
+                                    mx-2">
+                        <option v-for="shopping_group in shopping_groups" :value="shopping_group.id">{{ shopping_group.name }}</option>
                         </select>
                     </div>
 

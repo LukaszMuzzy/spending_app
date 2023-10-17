@@ -6,6 +6,7 @@ use App\Models\Receipt;
 use App\Models\ShoppingType;
 use App\Models\PaymentMethod;
 use App\Models\Shop;
+use App\Models\ShoppingGroup;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -24,7 +25,8 @@ class ReceiptController extends Controller
             'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop'])->latest()->get(),
             'shopping_types' => ShoppingType::all(),
             'payment_methods' => PaymentMethod::all(),
-            'shops' => Shop::all()
+            'shops' => Shop::all(),
+            'shopping_groups' => ShoppingGroup::all()
 
         ]);
     }
@@ -48,7 +50,8 @@ class ReceiptController extends Controller
             'shop_id' => 'required|numeric',
             'price' => 'required|numeric',
             'note' => 'nullable|string',
-            'date' => 'date'
+            'date' => 'date',
+            'shopping_group_id' => 'required|numeric'
         ]);
  
         $request->user()->receipts()->create($validated);
