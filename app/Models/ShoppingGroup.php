@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Model;
+
+class ShoppingGroup extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'user_id'
+    ];
+
+    
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class,'shopping_group_user', 'user_id', 'shopping_group_id');
+    }
+
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(Receipt::class);
+    }
+}
