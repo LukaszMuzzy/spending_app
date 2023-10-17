@@ -10,6 +10,7 @@ defineProps(['receipt']);
         <td class="whitespace-nowrap px-6 py-4">{{ receipt.price }}</td>
         <td class="whitespace-nowrap px-6 py-4">{{ receipt.payment_method.name }}</td>
         <td class="whitespace-nowrap px-6 py-4">{{ receipt.shop.name }}</td>
+        <td class="whitespace-nowrap px-6 py-4">{{ receipt.shopping_group.name }}</td>
         <td class="whitespace-nowrap px-6 py-4">{{ receipt.note }}</td>
         <td class="whitespace-nowrap px-6 py-4">{{ receipt.user.name }}</td>
     </tr>

@@ -61,7 +61,7 @@ class ShoppingGroupController extends Controller
 
 
  
-        return redirect(route('receipts.index'));
+        return redirect(route('shopping_groups.index'));
     }
 
     /**

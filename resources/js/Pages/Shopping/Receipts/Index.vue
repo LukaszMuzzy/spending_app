@@ -26,26 +26,31 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
     <Head title="Receipts" />
  
     <AuthenticatedLayout>
-        <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="mx-auto p-4 sm:p-6 lg:p-8">
             <form @submit.prevent="form.post(route('receipts.store'), { onSuccess: () => form.reset() })">
-                <div class="flex justify-between">
-
-                    <input
-                        type="date"
-                        v-model="form.date"
-                        id="date"
-                        class=" block
-                                min-w-fit
-                                border-gray-300
-                                focus:border-indigo-300
-                                focus:ring
-                                focus:ring-indigo-200
-                                focus:ring-opacity-50
-                                rounded-md
-                                shadow-sm
-                                mx-2"
-                    />
+                <div class="flex flex-wrap justify-between items-center">
+                    
                     <div>
+
+                        <label class="block mx-2 px-3" for="date" name="date">Date:</label>
+                        <input
+                            type="date"
+                            v-model="form.date"
+                            id="date"
+                            class=" block
+                                    min-w-fit
+                                    border-gray-300
+                                    focus:border-indigo-300
+                                    focus:ring
+                                    focus:ring-indigo-200
+                                    focus:ring-opacity-50
+                                    rounded-md
+                                    shadow-sm
+                                    mx-2"
+                        />
+                    </div>
+                    <div>
+                        <label class="block mx-2 px-3" for="shopping_type_id" name="shopping_type_id">Shopping Type:</label>
                         <select  v-model="form.shopping_type_id" id="shopping_type_id"
                             class=" block
                                     border-gray-300
@@ -60,28 +65,31 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                         <option v-for="shopping_type in shopping_types" :value="shopping_type.id">{{ shopping_type.description }}</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block mx-2 px-3" for="price" name="price">Price:</label>
 
-                    
-
-
-
-                    <input
-                        type="number"
-                        v-model="form.price"
-                        step=".01"
-                        placeholder="£0.00"
-                        class=" block
-                                border-gray-300
-                                focus:border-indigo-300
-                                focus:ring
-                                focus:ring-indigo-200
-                                focus:ring-opacity-50
-                                rounded-md
-                                shadow-sm
-                                mx-2"
-                    />
+                        <input
+                            type="number"
+                            id="price"
+                            v-model="form.price"
+                            step=".01"
+                            placeholder="£0.00"
+                            class=" block
+                                    border-gray-300
+                                    focus:border-indigo-300
+                                    focus:ring
+                                    focus:ring-indigo-200
+                                    focus:ring-opacity-50
+                                    rounded-md
+                                    shadow-sm
+                                    h-fit
+                                    mx-2"
+                        />
+                    </div>
 
                     <div>
+                        <label class="block mx-2 px-3 w-fit" for="payment_method_id" name="payment_method_id">Payment:</label>
+
                         <select  v-model="form.payment_method_id" id="payment_method_id"
                             class=" block
                                     border-gray-300
@@ -97,6 +105,8 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                     </div>
 
                     <div>
+                        <label class="block mx-2 px-3 w-fit" for="shop_id" name="shop_id">Shop:</label>
+
                         <select  v-model="form.shop_id" id="shop_id"
                             class=" block
                                     border-gray-300
@@ -112,6 +122,8 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                     </div>
 
                     <div>
+                        <label class="block mx-2 px-3 w-fit" for="shopping_group_id" name="shopping_group_id">Group:</label>
+
                         <select  v-model="form.shopping_group_id" id="shopping_group_id"
                             class=" block
                                     border-gray-300
@@ -125,21 +137,27 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                         <option v-for="shopping_group in shopping_groups" :value="shopping_group.id">{{ shopping_group.name }}</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block mx-2 px-3 w-fit" for="note" name="note">Notes:</label>
 
-                    <input
-                        type="text"
-                        v-model="form.note"
-                        placeholder="Notes"
-                        class=" block
-                                border-gray-300
-                                focus:border-indigo-300
-                                focus:ring
-                                focus:ring-indigo-200
-                                focus:ring-opacity-50
-                                rounded-md
-                                shadow-sm
-                                mx-2"
-                    />
+                        <input
+                            type="text"
+                            id="note"
+                            v-model="form.note"
+                            placeholder="Notes"
+                            class=" block
+                                    border-gray-300
+                                    focus:border-indigo-300
+                                    focus:ring
+                                    focus:ring-indigo-200
+                                    focus:ring-opacity-50
+                                    rounded-md
+                                    shadow-sm
+                                    h-fit
+                                    mx-2"
+                        />
+
+                    </div>
 
                     <InputError :message="form.errors.message" class="mt-2" />
                     
@@ -162,6 +180,7 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                         <th scope="col" class="px-6 py-4">Price</th>
                         <th scope="col" class="px-6 py-4">Payment Method</th>
                         <th scope="col" class="px-6 py-4">Shop</th>
+                        <th scope="col" class="px-6 py-4">Shopping Group</th>
                         <th scope="col" class="px-6 py-4">Note</th>
                         <th scope="col" class="px-6 py-4">Added By</th>
                         </tr>

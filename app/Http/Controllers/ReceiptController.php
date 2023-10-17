@@ -22,7 +22,7 @@ class ReceiptController extends Controller
 
         return Inertia::render('Shopping/Receipts/Index', [
             
-            'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop'])->latest()->get(),
+            'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop', 'shopping_group'])->latest()->get(),
             'shopping_types' => ShoppingType::all(),
             'payment_methods' => PaymentMethod::all(),
             'shops' => Shop::all(),
