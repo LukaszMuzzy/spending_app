@@ -14,7 +14,7 @@ const props = defineProps(['payment_methods']);
 </script>
  
 <template>
-    <Head title="Payment Metchods" />
+    <Head title="Payment Methods" />
  
     <AuthenticatedLayout>
         <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">

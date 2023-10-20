@@ -42,7 +42,7 @@ class PaymentMethodController extends Controller
             'name' => $request->name
         ]);
  
-        return redirect(route('payment_metchods.index'));
+        return redirect(route('payment_methods.index'));
     }
 
     /**
