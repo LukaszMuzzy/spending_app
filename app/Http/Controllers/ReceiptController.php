@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Receipt;
+use App\Models\User;
 use App\Models\ShoppingType;
 use App\Models\PaymentMethod;
 use App\Models\Shop;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Auth;
 
 class ReceiptController extends Controller
 {
@@ -20,13 +22,22 @@ class ReceiptController extends Controller
     public function index(): Response
     {
 
+        $users = User::with(['shopping_groups'])->where('id',Auth::user()->id)->get();
+        $userShopingGroupsIds = [];
+
+        foreach($users as $user){
+            $shoppingGroups = $user->shopping_groups;
+            foreach($shoppingGroups as $shoppingGroup){
+                $userShopingGroupsIds[] = $shoppingGroup->id;
+            }
+        }
         return Inertia::render('Shopping/Receipts/Index', [
             
-            'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop', 'shopping_group'])->latest()->get(),
+            'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop', 'shopping_group'])->whereIn('shopping_group_id', $userShopingGroupsIds)->latest()->get(),
             'shopping_types' => ShoppingType::all(),
             'payment_methods' => PaymentMethod::all(),
             'shops' => Shop::all(),
-            'shopping_groups' => ShoppingGroup::all()
+            'shopping_groups' => $shoppingGroups ?? []
 
         ]);
     }
