@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PaymentMethod;
+use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Auth;
+
 
 class PaymentMethodController extends Controller
 {
@@ -14,11 +17,13 @@ class PaymentMethodController extends Controller
      */
     public function index()
     {
+        $payment_methods = User::with(['payment_methods'])->find(Auth::id())->payment_methods;
+
         return Inertia::render('Shopping/PaymentMethods/Index', [
             
-            'payment_methods' => PaymentMethod::all()
-
+            'payment_methods' => $payment_methods
         ]);
+
     }
 
     /**
@@ -38,9 +43,13 @@ class PaymentMethodController extends Controller
             'name' => 'required|string'
         ]);
 
-        PaymentMethod::create([
-            'name' => $request->name
-        ]);
+        $payment_method = PaymentMethod::create($validated);
+
+        $user_id = Auth::id();
+
+        $user = User::find([$user_id]);
+
+        $payment_method->users()->attach($user);
  
         return redirect(route('payment_methods.index'));
     }

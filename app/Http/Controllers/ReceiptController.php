@@ -22,20 +22,27 @@ class ReceiptController extends Controller
     public function index(): Response
     {
 
-        $users = User::with(['shopping_groups'])->where('id',Auth::user()->id)->get();
+        $users = User::with(['shopping_groups', 'payment_methods'])->where('id',Auth::user()->id)->get();
         $userShopingGroupsIds = [];
+        $userPaymentMethodsIds= [];
 
         foreach($users as $user){
             $shoppingGroups = $user->shopping_groups;
             foreach($shoppingGroups as $shoppingGroup){
                 $userShopingGroupsIds[] = $shoppingGroup->id;
             }
+
+            $paymentMethods = $user->payment_methods;
+            foreach($paymentMethods as $paymentMethod){
+                $userPaymentMethodsIds[] = $paymentMethod->id;
+            }
+
         }
         return Inertia::render('Shopping/Receipts/Index', [
             
             'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop', 'shopping_group'])->whereIn('shopping_group_id', $userShopingGroupsIds)->latest()->get(),
             'shopping_types' => ShoppingType::all(),
-            'payment_methods' => PaymentMethod::all(),
+            'payment_methods' => $paymentMethods ?? [],
             'shops' => Shop::all(),
             'shopping_groups' => $shoppingGroups ?? []
 

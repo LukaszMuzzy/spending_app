@@ -39,9 +39,7 @@ class ShopController extends Controller
             'name' => 'required|string'
         ]);
 
-        Shop::create([
-            'name' => $request->name
-        ]);
+        Shop::create($validated);
  
         return redirect(route('shops.index'));
     }

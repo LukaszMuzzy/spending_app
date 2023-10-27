@@ -39,9 +39,7 @@ class ShoppingTypeController extends Controller
             'description' => 'required|string'
         ]);
 
-        ShoppingType::create([
-            'description' => $request->description
-        ]);
+        ShoppingType::create($validated);
  
         return redirect(route('shopping_types.index'));
     }
