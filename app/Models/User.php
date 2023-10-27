@@ -54,4 +54,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(ShoppingGroup::class,'shopping_group_user', 'user_id', 'shopping_group_id');
     }
+
+    public function payment_methods()
+    {
+        return $this->belongsToMany(PaymentMethod::class,'payment_method_user', 'user_id', 'payment_method_id');
+    }
 }

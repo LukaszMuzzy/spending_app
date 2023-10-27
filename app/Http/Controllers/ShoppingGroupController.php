@@ -19,11 +19,6 @@ class ShoppingGroupController extends Controller
 
         $shopping_group = User::with(['shopping_groups'])->find(Auth::id())->shopping_groups;
 
-
-
-            $test = json_decode(json_encode($shopping_group));
-
-
         return Inertia::render('Shopping/ShoppingGroups/Index', [
             
             'shopping_groups' => $shopping_group
