@@ -146,7 +146,9 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                             v-model="form.note"
                             placeholder="Notes"
                             class=" block
-                                    border-gray-300
+                                    border-gray-300Update Google Calendar API
+                                    
+                                    
                                     focus:border-indigo-300
                                     focus:ring
                                     focus:ring-indigo-200
@@ -183,6 +185,7 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                         <th scope="col" class="px-6 py-4">Shopping Group</th>
                         <th scope="col" class="px-6 py-4">Note</th>
                         <th scope="col" class="px-6 py-4">Added By</th>
+                        <th scope="col" class="px-6 py-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
