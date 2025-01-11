@@ -26,9 +26,9 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+        // 'canRegister' => Route::has('register'),
+        // 'laravelVersion' => Application::VERSION,
+        // 'phpVersion' => PHP_VERSION,
     ]);
 });
 
@@ -44,14 +44,17 @@ Route::get('/dashboard', function () {
         }
 
     }
+
+    $total = Receipt::whereIn('shopping_group_id', $userShopingGroupsIds)->sum('price');
     return Inertia::render('Dashboard',
 [
     'totalByGroup' => Receipt::select('shopping_type_id', \DB::raw('SUM(price) as total_price'))
                     ->with(['shopping_type'])
                     ->groupBy('shopping_type_id')
                     ->whereIn('shopping_group_id', $userShopingGroupsIds)
+                    ->orderBy('total_price', 'desc')
                     ->get(),
-    'total' => Receipt::whereIn('shopping_group_id', $userShopingGroupsIds)->sum('price')
+    'total' => $total
 ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 

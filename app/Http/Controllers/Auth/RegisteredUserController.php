@@ -21,6 +21,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
+        // TODO Blocked registraction for now until ready
+        return Inertia::render('Welcome');
         return Inertia::render('Auth/Register');
     }
 
@@ -31,6 +33,8 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // TODO Blocked registraction for now until ready
+        return Inertia::render('Welcome');
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:'.User::class,
