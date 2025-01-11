@@ -8,6 +8,8 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
+use App\Models\Receipt;
 use Inertia\Inertia;
 
 /*
@@ -31,7 +33,26 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+
+    $users = User::with(['shopping_groups'])->where('id',Auth::user()->id)->get();
+    $userShopingGroupsIds = [];
+
+    foreach($users as $user){
+        $shoppingGroups = $user->shopping_groups;
+        foreach($shoppingGroups as $shoppingGroup){
+            $userShopingGroupsIds[] = $shoppingGroup->id;
+        }
+
+    }
+    return Inertia::render('Dashboard',
+[
+    'totalByGroup' => Receipt::select('shopping_type_id', \DB::raw('SUM(price) as total_price'))
+                    ->with(['shopping_type'])
+                    ->groupBy('shopping_type_id')
+                    ->whereIn('shopping_group_id', $userShopingGroupsIds)
+                    ->get(),
+    'total' => Receipt::whereIn('shopping_group_id', $userShopingGroupsIds)->sum('price')
+]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
