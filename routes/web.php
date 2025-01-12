@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\User;
 use App\Models\Receipt;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,9 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
 
+    $currentMonthStart = Carbon::now()->startOfMonth()->format('Y-m-d');
+    $currentMonthEnd = Carbon::now()->endOfMonth()->format('Y-m-d');
+
     $users = User::with(['shopping_groups'])->where('id',Auth::user()->id)->get();
     $userShopingGroupsIds = [];
 
@@ -51,10 +55,13 @@ Route::get('/dashboard', function () {
     'totalByGroup' => Receipt::select('shopping_type_id', \DB::raw('SUM(price) as total_price'))
                     ->with(['shopping_type'])
                     ->groupBy('shopping_type_id')
+                    ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
                     ->whereIn('shopping_group_id', $userShopingGroupsIds)
                     ->orderBy('total_price', 'desc')
                     ->get(),
-    'total' => $total
+    'total' => $total,
+    'start_date' => $currentMonthStart,
+    'end_date' => $currentMonthEnd
 ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
