@@ -40,7 +40,7 @@ class ReceiptController extends Controller
         }
         return Inertia::render('Shopping/Receipts/Index', [
             
-            'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop', 'shopping_group'])->whereIn('shopping_group_id', $userShopingGroupsIds)->latest()->get(),
+            'receipts' => Receipt::with(['user','shopping_type', 'payment_method', 'shop', 'shopping_group'])->whereIn('shopping_group_id', $userShopingGroupsIds)->orderBy('date', 'desc')->get(),
             'shopping_types' => ShoppingType::all(),
             'payment_methods' => $paymentMethods ?? [],
             'shops' => Shop::all(),

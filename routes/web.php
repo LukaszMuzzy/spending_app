@@ -8,7 +8,10 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
+use App\Models\Receipt;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,14 +27,42 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+        // 'canRegister' => Route::has('register'),
+        // 'laravelVersion' => Application::VERSION,
+        // 'phpVersion' => PHP_VERSION,
     ]);
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+
+    $currentMonthStart = Carbon::now()->startOfMonth()->format('Y-m-d');
+    $currentMonthEnd = Carbon::now()->endOfMonth()->format('Y-m-d');
+
+    $users = User::with(['shopping_groups'])->where('id',Auth::user()->id)->get();
+    $userShopingGroupsIds = [];
+
+    foreach($users as $user){
+        $shoppingGroups = $user->shopping_groups;
+        foreach($shoppingGroups as $shoppingGroup){
+            $userShopingGroupsIds[] = $shoppingGroup->id;
+        }
+
+    }
+
+    $total = Receipt::whereIn('shopping_group_id', $userShopingGroupsIds)->sum('price');
+    return Inertia::render('Dashboard',
+[
+    'totalByGroup' => Receipt::select('shopping_type_id', \DB::raw('SUM(price) as total_price'))
+                    ->with(['shopping_type'])
+                    ->groupBy('shopping_type_id')
+                    ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
+                    ->whereIn('shopping_group_id', $userShopingGroupsIds)
+                    ->orderBy('total_price', 'desc')
+                    ->get(),
+    'total' => $total,
+    'start_date' => $currentMonthStart,
+    'end_date' => $currentMonthEnd
+]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

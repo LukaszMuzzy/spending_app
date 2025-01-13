@@ -19,7 +19,7 @@ class ShoppingGroup extends Model
     
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class,'shopping_group_user', 'user_id', 'shopping_group_id');
+        return $this->belongsToMany(User::class,'shopping_group_user', 'shopping_group_id', 'user_id');
     }
 
     public function receipts(): HasMany
