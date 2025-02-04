@@ -3,12 +3,17 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps(['totalByGroup', 'total', 'start_date', 'end_date']);
+const props = defineProps(['totalByGroup', 'total', 'total1', 'total2', 'start_date', 'end_date']);
+
+console.log(props.start_date)
 
 const totalByGroup = ref(props.totalByGroup);
 const total = ref(props.total)
 
 const currentMonth = new Date(props.start_date).getMonth();
+
+
+console.log(currentMonth)
 
 const monthNames = [
   "January", "February", "March", "April", "May", "June",
@@ -16,6 +21,8 @@ const monthNames = [
 ];
 
 const currentMonthName = monthNames[currentMonth];
+const currentMonthName_1 = monthNames[currentMonth-1];
+const currentMonthName_2 = monthNames[currentMonth-2];
 
 </script>
 
@@ -37,11 +44,14 @@ const currentMonthName = monthNames[currentMonth];
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">Your total spenings accross all spening groups in {{ currentMonthName }} are £{{ total.toFixed(2) }}<br> Here is a breakdown by Shopping Type:</div>
+                    <div class="p-6 text-gray-900">Your total spenings accross all spening groups in {{ currentMonthName }} are £{{ total.toFixed(2) }}
+                        <br> Here is a breakdown by Shopping Type:</div>
                     <div v-if="props.totalByGroup.length === 0" class="px-6 text-gray-900">Nothing to display</div>
                     <div v-for="shoppingType in props.totalByGroup" :key="shoppingType.shopping_type_id" class="px-6 text-gray-900">
                         {{ shoppingType.shopping_type.description }} - £ {{ shoppingType.total_price.toFixed((2)) }}
                     </div>
+                    <div class="py-2 px-6 text-gray-900">Your total spenings accross all spening groups in {{ currentMonthName_1 }} are £{{ total1.toFixed(2) }}</div>
+                    <div class="py-2 px-6 text-gray-900">Your total spenings accross all spening groups in {{ currentMonthName_2 }} are £{{ total2.toFixed(2) }}</div>
                 </div>
             </div>
         </div>

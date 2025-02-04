@@ -35,8 +35,8 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
 
-    $currentMonthStart = Carbon::now()->startOfMonth()->format('Y-m-d');
-    $currentMonthEnd = Carbon::now()->endOfMonth()->format('Y-m-d');
+    $currentMonthStart = Carbon::now()->copy();
+    $currentMonthEnd = Carbon::now()->copy()->endOfMonth();
 
     $users = User::with(['shopping_groups'])->where('id',Auth::user()->id)->get();
     $userShopingGroupsIds = [];
@@ -49,19 +49,39 @@ Route::get('/dashboard', function () {
 
     }
 
-    $total = Receipt::whereIn('shopping_group_id', $userShopingGroupsIds)->sum('price');
+    $monthsArray = ['total', 'total1', 'total3'];
+
+    $totals = [];
+
+    foreach ($monthsArray as $k => $v){
+        $starOfMonth = $currentMonthStart->copy()->subMonth($k)->startOfMonth();
+        $endOfMonth = $currentMonthEnd->copy()->subMonth($k)->endOfMonth();
+        $totals[$v] = Receipt::whereIn('shopping_group_id', $userShopingGroupsIds)
+                                ->whereBetween('date', [$starOfMonth, $endOfMonth])
+                                ->sum('price');
+    }
+
+
+    $starOfMonth = $currentMonthStart->copy()->startOfMonth();
+    $endOfMonth = $currentMonthEnd->copy()->endOfMonth();
+
+    $test = $starOfMonth->toDateString();
+    $test2 = 0;
+
     return Inertia::render('Dashboard',
 [
     'totalByGroup' => Receipt::select('shopping_type_id', \DB::raw('SUM(price) as total_price'))
+                    ->whereBetween('date', [$starOfMonth, $endOfMonth])
                     ->with(['shopping_type'])
                     ->groupBy('shopping_type_id')
-                    ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
                     ->whereIn('shopping_group_id', $userShopingGroupsIds)
                     ->orderBy('total_price', 'desc')
                     ->get(),
-    'total' => $total,
-    'start_date' => $currentMonthStart,
-    'end_date' => $currentMonthEnd
+    'total' => $totals['total'],
+    'total1' =>$totals['total1'],
+    'total2' =>$totals['total3'],
+    'start_date' => $starOfMonth->toDateString(),
+    'end_date' => $endOfMonth->toDateString()
 ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 

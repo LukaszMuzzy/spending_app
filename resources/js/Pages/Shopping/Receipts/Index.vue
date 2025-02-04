@@ -26,7 +26,7 @@ function handleEditReceipt(editedReciept) {
     console.log('Edit Parent')
     console.log(editedReciept);
     const originalReceipt = currentReceipts.value.find( receipt => receipt.id === editedReciept.id)
-    const url = route('receipts.update', {receipt: 100})
+    const url = route('receipts.update', {receipt: editedReciept.id})
 
     const editedReceiptForm = useForm({
         shopping_type_id: editedReciept.shopping_type_id,
@@ -34,7 +34,7 @@ function handleEditReceipt(editedReciept) {
         shop_id: editedReciept.shop_id,
         price: editedReciept.price,
         note: editedReciept.note,
-        date: editedReciept.date,
+        date: dayjs(editedReciept.date).format('YYYY-MM-DD'),
         shopping_group_id: editedReciept.shopping_group_id
     });
 
@@ -44,7 +44,6 @@ function handleEditReceipt(editedReciept) {
         editedReceiptForm.put(url, {
             onSuccess: () => editedReceiptForm.reset()
         })
-        // console.log(response);
     }
     isEdited();
 }
@@ -229,6 +228,10 @@ function handleEditReceipt(editedReciept) {
                             :key="receipt.id"
                             :receipt="receipt"
                             @submitEditReceipt="handleEditReceipt"
+                            :shopping_types="shopping_types"
+                            :payment_methods="payment_methods"
+                            :shops="shops"
+                            :shopping_groups="shopping_groups"
                             
                         />
 
