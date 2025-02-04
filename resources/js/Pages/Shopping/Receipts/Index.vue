@@ -5,19 +5,51 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Receipt from '@/Components/Receipt.vue';
 import { useForm, Head } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
+import {ref} from 'vue';
  
+const props = defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping_groups']);
+
+let currentReceipts = ref(props.receipts);
+
 const form = useForm({
     shopping_type_id: '',
-    payment_method_id: 1,
-    shop_id: 1,
-    price: 0,
+    payment_method_id: '',
+    shop_id: '',
+    price: null,
     note: '',
     date: dayjs().format('YYYY-MM-DD'),
-    shopping_group_id: 1
+    shopping_group_id: ''
 });
 
 
-defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping_groups']);
+function handleEditReceipt(editedReciept) {
+    console.log('Edit Parent')
+    console.log(editedReciept);
+    const originalReceipt = currentReceipts.value.find( receipt => receipt.id === editedReciept.id)
+    const url = route('receipts.update', {receipt: 100})
+
+    const editedReceiptForm = useForm({
+        shopping_type_id: editedReciept.shopping_type_id,
+        payment_method_id: editedReciept.payment_method_id,
+        shop_id: editedReciept.shop_id,
+        price: editedReciept.price,
+        note: editedReciept.note,
+        date: editedReciept.date,
+        shopping_group_id: editedReciept.shopping_group_id
+    });
+
+
+    let isEdited = async () => {
+
+        editedReceiptForm.put(url, {
+            onSuccess: () => editedReceiptForm.reset()
+        })
+        // console.log(response);
+    }
+    isEdited();
+}
+
+
 
 
 </script>
@@ -61,7 +93,7 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                                     rounded-md
                                     shadow-sm
                                     mx-2">
-                        <option disabled value="">Shoping Group</option>
+                        <option disabled value="">Shoping Type</option>
                         <option v-for="shopping_type in shopping_types" :value="shopping_type.id">{{ shopping_type.description }}</option>
                         </select>
                     </div>
@@ -100,6 +132,7 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                                     rounded-md
                                     shadow-sm
                                     mx-2">
+                        <option disabled value="">Payment method</option>
                         <option v-for="payment_method in payment_methods" :value="payment_method.id">{{ payment_method.name }}</option>
                         </select>
                     </div>
@@ -117,6 +150,7 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                                     rounded-md
                                     shadow-sm
                                     mx-2">
+                        <option disabled value="">Shop</option>
                         <option v-for="shop in shops" :value="shop.id">{{ shop.name }}</option>
                         </select>
                     </div>
@@ -134,6 +168,7 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                                     rounded-md
                                     shadow-sm
                                     mx-2">
+                        <option disabled value="">Shoping Group</option>
                         <option v-for="shopping_group in shopping_groups" :value="shopping_group.id">{{ shopping_group.name }}</option>
                         </select>
                     </div>
@@ -193,6 +228,8 @@ defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping
                             v-for="receipt in receipts"
                             :key="receipt.id"
                             :receipt="receipt"
+                            @submitEditReceipt="handleEditReceipt"
+                            
                         />
 
                     </tbody>

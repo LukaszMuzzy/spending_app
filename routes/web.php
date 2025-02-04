@@ -80,7 +80,7 @@ Route::get('/test', function () {
 });
 
 Route::resource('receipts', ReceiptController::class)
-    ->only(['index', 'store'])
+    ->only(['index', 'store', 'update', 'edit'])
     ->middleware(['auth', 'verified']);
 
 Route::resource('shops', ShopController::class)

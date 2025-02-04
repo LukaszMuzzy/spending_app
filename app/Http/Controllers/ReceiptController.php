@@ -98,7 +98,20 @@ class ReceiptController extends Controller
      */
     public function update(Request $request, Receipt $receipt)
     {
-        //
+
+        $validated = $request->validate([
+            'shopping_type_id' => 'required|numeric',
+            'payment_method_id' => 'required|numeric',
+            'shop_id' => 'required|numeric',
+            'price' => 'required|numeric',
+            'note' => 'nullable|string',
+            'date' => 'date',
+            'shopping_group_id' => 'required|numeric'
+        ]);
+
+        $receipt->update($validated);
+
+        return redirect(route('receipts.index'));
     }
 
     /**
