@@ -78,7 +78,7 @@ const props = defineProps(['dd_payments', 'shopping_groups', 'shops', 'payment_m
                         </select>
 
                         <input
-                            type="number"
+                            type="float"
                             v-model="form.price"
                             placeholder="Price"
                             class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
