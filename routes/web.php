@@ -5,6 +5,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShoppingTypeController;
 use App\Http\Controllers\ShoppingGroupController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\DdPaymentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -115,9 +116,12 @@ Route::resource('shopping_groups', ShoppingGroupController::class)
     ->only(['index', 'store'])
     ->middleware(['auth', 'verified']);
 
-
 Route::resource('payment_methods', PaymentMethodController::class)
     ->only(['index', 'store'])
+    ->middleware(['auth', 'verified']);
+
+Route::resource('dd_payments', DdPaymentController::class)
+    ->only(['index', 'store', 'show', 'update', 'destroy'])
     ->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';

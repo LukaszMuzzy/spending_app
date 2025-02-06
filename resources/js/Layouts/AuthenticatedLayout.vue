@@ -47,6 +47,9 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('payment_methods.index')" :active="route().current('payment_methods.index')">
                                     Payment Methods
                                 </NavLink>
+                                <NavLink :href="route('dd_payments.index')" :active="route().current('dd_payments.index')">
+                                    DD Payments
+                                </NavLink>
                             </div>
                         </div>
 

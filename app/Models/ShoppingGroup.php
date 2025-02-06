@@ -26,4 +26,12 @@ class ShoppingGroup extends Model
     {
         return $this->hasMany(Receipt::class);
     }
+
+    /**
+     * Get the payments associated with the shopping group.
+     */
+    public function ddPayments(): HasMany
+    {
+        return $this->hasMany(DdPayment::class);
+    }
 }
