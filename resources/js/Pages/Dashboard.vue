@@ -92,10 +92,10 @@ const pieChartData = computed(() => ({
                         </div>
                         <div class="mt-8">
                             <h3 class="text-lg font-semibold mb-4">Detailed Breakdown for {{ currentMonthName }}</h3>
-                            <p>Total Spendings: {{ props.total }}</p>
+                            <p>Total Spendings: £{{ props.total.toFixed(2) }}</p>
                             <ul class="list-disc list-inside">
                                 <li v-for="group in totalByGroup" :key="group.shopping_type.id">
-                                    {{ group.shopping_type.description }}: {{ group.total_price }}
+                                    {{ group.shopping_type.description }}: £{{ group.total_price.toFixed(2) }}
                                 </li>
                             </ul>
                         </div>
