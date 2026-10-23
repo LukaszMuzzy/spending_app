@@ -1,76 +1,41 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 import InputError from '@/Components/InputError.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { useForm, Head } from '@inertiajs/vue3';
- 
-const form = useForm({
-    name: ''
-});
+import { Head, useForm } from '@inertiajs/vue3';
 
+const form = useForm({ name: '' });
+defineProps({ shopping_groups: Array });
 
-const props = defineProps(['shopping_groups']);
-
-console.log(props)
+const inputClass =
+    'block w-full rounded-xl border-border shadow-sm focus:border-accent focus:ring-accent';
 </script>
- 
+
 <template>
-    <Head title="Shopping Types" />
- 
+    <Head title="Groups" />
+
     <AuthenticatedLayout>
-        <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-            <form @submit.prevent="form.post(route('shopping_groups.store'), { onSuccess: () => form.reset() })">
-                <div class="flex justify-between">
+        <PageHeader title="Groups" description="Household or shared spending groups you belong to." />
 
-                    <input
-                        type="text"
-                        v-model="form.name"
-                        placeholder="Shopping Group Name"
-                        class=" block
-                                border-gray-300
-                                focus:border-indigo-300
-                                focus:ring
-                                focus:ring-indigo-200/50
-                                rounded-md
-                                shadow-sm
-                                mx-2"
-                    />
-
-                    <InputError :message="form.errors.message" class="mt-2" />
-                    
+        <Card>
+            <form class="flex flex-wrap items-end gap-3" @submit.prevent="form.post(route('shopping_groups.store'), { onSuccess: () => form.reset() })">
+                <div class="min-w-[16rem] flex-1">
+                    <label class="mb-1 block text-sm font-medium text-ink">Group name</label>
+                    <input v-model="form.name" type="text" :class="inputClass" required />
+                    <InputError :message="form.errors.name" class="mt-1" />
                 </div>
-                <div class="flex justify-end">
-                    <PrimaryButton class="mt-4">Add</PrimaryButton>                    
-                </div>
+                <PrimaryButton :disabled="form.processing">Add group</PrimaryButton>
             </form>
+        </Card>
 
-            <div class="mt-6 bg-white shadow-sm rounded-lg divide-y">
-                <div class="flex flex-col">
-        <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-                <div class="overflow-hidden">
-                    <table class="min-w-full text-left text-sm font-light">
-                    <thead class="border-b font-medium dark:border-neutral-500">
-                        <tr>
-                        <th scope="col" class="px-6 py-4">Shopping Groups</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="shopping_group in shopping_groups"
-                            :key="shopping_group.id"
-                            :shopping_group="shopping_group"
-                            class="border-b transition duration-300 ease-in-out hover:bg-neutral-100 dark:border-neutral-500 dark:hover:bg-neutral-600">
-                            <td class="whitespace-nowrap px-6 py-4">{{ shopping_group.name }}</td>
-                        </tr>
-
-                    </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
- 
-            </div>
-        </div>
+        <Card class="mt-6" :padding="false">
+            <ul v-if="shopping_groups?.length" class="divide-y divide-border">
+                <li v-for="group in shopping_groups" :key="group.id" class="px-5 py-3 text-sm text-ink">{{ group.name }}</li>
+            </ul>
+            <EmptyState v-else class="m-6" title="No groups yet" description="Create a group so receipts can be shared across people." />
+        </Card>
     </AuthenticatedLayout>
 </template>

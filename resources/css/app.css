@@ -11,6 +11,18 @@
     --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
         "Segoe UI Symbol", "Noto Color Emoji";
     --default-ring-width: 3px;
+
+    --color-ink: #1c1917;
+    --color-ink-muted: #57534e;
+    --color-surface: #faf7f2;
+    --color-card: #ffffff;
+    --color-accent: #0f766e;
+    --color-accent-soft: #ccfbf1;
+    --color-good: #15803d;
+    --color-good-soft: #dcfce7;
+    --color-warn: #b45309;
+    --color-warn-soft: #ffedd5;
+    --color-border: #e7e5e4;
 }
 
 /*
@@ -23,6 +35,10 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--color-border, currentColor);
+    }
+
+    body {
+        @apply bg-surface text-ink antialiased;
     }
 }

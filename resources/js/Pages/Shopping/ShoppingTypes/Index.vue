@@ -1,74 +1,41 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 import InputError from '@/Components/InputError.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { useForm, Head } from '@inertiajs/vue3';
- 
-const form = useForm({
-    description: ''
-});
+import { Head, useForm } from '@inertiajs/vue3';
 
+const form = useForm({ description: '' });
+defineProps({ shopping_types: Array });
 
-defineProps(['shopping_types']);
+const inputClass =
+    'block w-full rounded-xl border-border shadow-sm focus:border-accent focus:ring-accent';
 </script>
- 
+
 <template>
-    <Head title="Shopping Types" />
- 
+    <Head title="Categories" />
+
     <AuthenticatedLayout>
-        <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-            <form @submit.prevent="form.post(route('shopping_types.store'), { onSuccess: () => form.reset() })">
-                <div class="flex justify-between">
+        <PageHeader title="Categories" description="Shopping types such as groceries, fuel, or entertainment." />
 
-                    <input
-                        type="text"
-                        v-model="form.description"
-                        placeholder="Shopping Type Name"
-                        class=" block
-                                border-gray-300
-                                focus:border-indigo-300
-                                focus:ring
-                                focus:ring-indigo-200/50
-                                rounded-md
-                                shadow-sm
-                                mx-2"
-                    />
-
-                    <InputError :message="form.errors.message" class="mt-2" />
-                    
+        <Card>
+            <form class="flex flex-wrap items-end gap-3" @submit.prevent="form.post(route('shopping_types.store'), { onSuccess: () => form.reset() })">
+                <div class="min-w-[16rem] flex-1">
+                    <label class="mb-1 block text-sm font-medium text-ink">Category name</label>
+                    <input v-model="form.description" type="text" :class="inputClass" required />
+                    <InputError :message="form.errors.description" class="mt-1" />
                 </div>
-                <div class="flex justify-end">
-                    <PrimaryButton class="mt-4">Add</PrimaryButton>                    
-                </div>
+                <PrimaryButton :disabled="form.processing">Add category</PrimaryButton>
             </form>
+        </Card>
 
-            <div class="mt-6 bg-white shadow-sm rounded-lg divide-y">
-                <div class="flex flex-col">
-        <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-                <div class="overflow-hidden">
-                    <table class="min-w-full text-left text-sm font-light">
-                    <thead class="border-b font-medium dark:border-neutral-500">
-                        <tr>
-                        <th scope="col" class="px-6 py-4">Shopping Types</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="shopping_type in shopping_types"
-                            :key="shopping_type.id"
-                            :shopping_type="shopping_type"
-                            class="border-b transition duration-300 ease-in-out hover:bg-neutral-100 dark:border-neutral-500 dark:hover:bg-neutral-600">
-                            <td class="whitespace-nowrap px-6 py-4">{{ shopping_type.description }}</td>
-                        </tr>
-
-                    </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
- 
-            </div>
-        </div>
+        <Card class="mt-6" :padding="false">
+            <ul v-if="shopping_types?.length" class="divide-y divide-border">
+                <li v-for="type in shopping_types" :key="type.id" class="px-5 py-3 text-sm text-ink">{{ type.description }}</li>
+            </ul>
+            <EmptyState v-else class="m-6" title="No categories yet" description="Add categories before logging spending." />
+        </Card>
     </AuthenticatedLayout>
 </template>

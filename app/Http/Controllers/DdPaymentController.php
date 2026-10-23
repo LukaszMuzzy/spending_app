@@ -3,47 +3,76 @@
 namespace App\Http\Controllers;
 
 use App\Models\DdPayment;
-use App\Models\ShoppingGroup;
-use App\Models\Shop;
 use App\Models\PaymentMethod;
+use App\Models\Shop;
+use App\Models\ShoppingGroup;
 use App\Models\ShoppingType;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DdPaymentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): Response
     {
-        $user = Auth::user();
-        $shoppingGroupIds = $user->shopping_groups()->pluck('shopping_groups.id');
-        $ddPayments = DdPayment::with(['shoppingGroup', 'paymentMethod', 'shop', 'shoppingType'])->whereIn('shopping_group_id', $shoppingGroupIds)->get();
-        $shoppingGroups = ShoppingGroup::whereIn('id', $shoppingGroupIds)->get();
-        $shops = Shop::all();
-        $paymentMethods = PaymentMethod::all();
-        $shoppingTypes = ShoppingType::all();
+        $user = $request->user();
+        $shoppingGroupIds = $user->shoppingGroupIds();
 
-        return inertia('Shopping/DdPayments/Index', [
-            'dd_payments' => $ddPayments,
-            'shopping_groups' => $shoppingGroups,
-            'shops' => $shops,
-            'payment_methods' => $paymentMethods,
-            'shopping_types' => $shoppingTypes,
+        return Inertia::render('Shopping/DdPayments/Index', [
+            'dd_payments' => DdPayment::query()
+                ->with(['shoppingGroup', 'paymentMethod', 'shop', 'shoppingType'])
+                ->whereIn('shopping_group_id', $shoppingGroupIds ?: [0])
+                ->orderBy('name')
+                ->get(),
+            'shopping_groups' => ShoppingGroup::query()
+                ->whereIn('id', $shoppingGroupIds ?: [0])
+                ->orderBy('name')
+                ->get(),
+            'shops' => Shop::orderBy('name')->get(),
+            'payment_methods' => PaymentMethod::orderBy('name')->get(),
+            'shopping_types' => ShoppingType::orderBy('description')->get(),
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $validatedData = $request->validate([
+        $validated = $this->validated($request);
+        $this->assertGroupAccess((int) $validated['shopping_group_id']);
+
+        DdPayment::create($validated);
+
+        return redirect()->route('dd_payments.index');
+    }
+
+    public function update(Request $request, DdPayment $dd_payment): RedirectResponse
+    {
+        $this->assertGroupAccess((int) $dd_payment->shopping_group_id);
+
+        $validated = $this->validated($request);
+        $this->assertGroupAccess((int) $validated['shopping_group_id']);
+
+        $dd_payment->update($validated);
+
+        return redirect()->route('dd_payments.index');
+    }
+
+    public function destroy(DdPayment $dd_payment): RedirectResponse
+    {
+        $this->assertGroupAccess((int) $dd_payment->shopping_group_id);
+        $dd_payment->delete();
+
+        return redirect()->route('dd_payments.index');
+    }
+
+    private function validated(Request $request): array
+    {
+        return $request->validate([
             'name' => 'required|string|max:255',
             'payment_date' => 'required|date',
             'end_date' => 'nullable|date',
-            'frequency' => 'nullable|in:daily,weekly,fortnightly,monthly,quarterly,half-yearly,yearly',
+            'frequency' => 'required|in:daily,weekly,fortnightly,monthly,quarterly,half-yearly,yearly',
             'price' => 'required|numeric|min:0',
             'is_active' => 'required|boolean',
             'shopping_group_id' => 'required|exists:shopping_groups,id',
@@ -51,50 +80,10 @@ class DdPaymentController extends Controller
             'payment_method_id' => 'required|exists:payment_methods,id',
             'shopping_type_id' => 'required|exists:shopping_types,id',
         ]);
-
-        $ddPayment = DdPayment::create($validatedData);
-        return redirect()->route('dd_payments.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
+    private function assertGroupAccess(int $groupId): void
     {
-        $ddPayment = DdPayment::findOrFail($id);
-        return response()->json($ddPayment);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        $validatedData = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'payment_date' => 'sometimes|required|date',
-            'end_date' => 'nullable|date',
-            'frequency' => 'nullable|in:daily,weekly,fortnightly,monthly,quarterly,half-yearly,yearly',
-            'price' => 'sometimes|required|numeric|min:0',
-            'is_active' => 'sometimes|required|boolean',
-            'shopping_group_id' => 'sometimes|required|exists:shopping_groups,id',
-            'shop_id' => 'sometimes|required|exists:shops,id',
-            'payment_method_id' => 'sometimes|required|exists:payment_methods,id',
-            'shopping_type_id' => 'sometimes|required|exists:shopping_types,id',
-        ]);
-
-        $ddPayment = DdPayment::findOrFail($id);
-        $ddPayment->update($validatedData);
-        return response()->json($ddPayment);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        $ddPayment = DdPayment::findOrFail($id);
-        $ddPayment->delete(); // Soft delete the record
-        return response()->json(null, 204);
+        abort_unless(in_array($groupId, Auth::user()->shoppingGroupIds(), true), 403);
     }
 }

@@ -9,102 +9,94 @@ use Carbon\Carbon;
 
 class CheckDdPayments extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'check:ddpayments';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Check all active DD Payments and insert them into Receipts if the payment day is the same as the current day';
+    protected $description = 'Check all active DD Payments and insert them into Receipts if due';
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
     public function handle()
     {
         $today = Carbon::now()->startOfDay();
-        $ddPayments = DdPayment::where('is_active', true)->get();
+        $ddPayments = DdPayment::with('shoppingGroup.users')->where('is_active', true)->get();
 
         foreach ($ddPayments as $ddPayment) {
-            $shouldInsert = false;
-            $paymentDate = Carbon::parse($ddPayment->payment_date); // Ensure payment_date is a Carbon instance
-            $nextPaymentDate = $paymentDate;
-
-            switch ($ddPayment->frequency) {
-                case 'daily':
-                    $nextPaymentDate = $today;
-                    $shouldInsert = !$this->receiptExists($ddPayment, $today);
-                    break;
-                case 'weekly':
-                    $nextPaymentDate = $paymentDate->copy()->addWeek();
-                    $shouldInsert = !$this->receiptExists($ddPayment, $today->copy()->subWeek());
-                    break;
-                case 'fortnightly':
-                    $nextPaymentDate = $paymentDate->copy()->addWeeks(2);
-                    $shouldInsert = !$this->receiptExists($ddPayment, $today->copy()->subWeeks(2));
-                    break;
-                case 'monthly':
-                    $nextPaymentDate = $paymentDate->copy()->addMonth();
-                    $shouldInsert = !$this->receiptExists($ddPayment, $today->copy()->subMonth());
-                    break;
-                case 'quarterly':
-                    $nextPaymentDate = $paymentDate->copy()->addMonths(3);
-                    $shouldInsert = !$this->receiptExists($ddPayment, $today->copy()->subMonths(3));
-                    break;
-                case 'half-yearly':
-                    $nextPaymentDate = $paymentDate->copy()->addMonths(6);
-                    $shouldInsert = !$this->receiptExists($ddPayment, $today->copy()->subMonths(6));
-                    break;
-                case 'yearly':
-                    $nextPaymentDate = $paymentDate->copy()->addYear();
-                    $shouldInsert = !$this->receiptExists($ddPayment, $today->copy()->subYear());
-                    break;
-                default:
-                    $shouldInsert = false;
-                    break;
+            if ($ddPayment->end_date && Carbon::parse($ddPayment->end_date)->lt($today)) {
+                continue;
             }
 
-            if ($shouldInsert) {
-                Receipt::create([
-                    'note' => $ddPayment->name,
-                    'date' => $paymentDate,
-                    'price' => $ddPayment->price,
-                    'shopping_group_id' => $ddPayment->shopping_group_id,
-                    'shop_id' => $ddPayment->shop_id,
-                    'payment_method_id' => $ddPayment->payment_method_id,
-                    'shopping_type_id' => $ddPayment->shopping_type_id,
-                    'user_id' => 1,
-                    'dd_payment_id' => $ddPayment->id
-                ]);
-
-                // Update the payment_date to the next period
-                $ddPayment->payment_date = $nextPaymentDate;
-                $ddPayment->save();
+            $paymentDate = Carbon::parse($ddPayment->payment_date)->startOfDay();
+            if (! $paymentDate->equalTo($today) && ! $this->isDueToday($ddPayment, $today)) {
+                continue;
             }
+
+            if ($this->receiptExists($ddPayment, $today)) {
+                continue;
+            }
+
+            $userId = $ddPayment->shoppingGroup?->users?->first()?->id;
+            if (! $userId) {
+                $this->warn("Skipping DD payment {$ddPayment->id}: no user on shopping group.");
+                continue;
+            }
+
+            Receipt::create([
+                'note' => $ddPayment->name,
+                'date' => $today->toDateString(),
+                'price' => $ddPayment->price,
+                'shopping_group_id' => $ddPayment->shopping_group_id,
+                'shop_id' => $ddPayment->shop_id,
+                'payment_method_id' => $ddPayment->payment_method_id,
+                'shopping_type_id' => $ddPayment->shopping_type_id,
+                'user_id' => $userId,
+                'dd_payment_id' => $ddPayment->id,
+                'source' => 'manual',
+                'needs_review' => false,
+            ]);
+
+            $ddPayment->payment_date = $this->nextPaymentDate($paymentDate, $ddPayment->frequency ?: 'monthly');
+            $ddPayment->save();
         }
 
         return Command::SUCCESS;
     }
 
-    /**
-     * Check if a receipt already exists for the given DdPayment within the specified period.
-     *
-     * @param DdPayment $ddPayment
-     * @param Carbon $periodStart
-     * @return bool
-     */
-    private function receiptExists(DdPayment $ddPayment, Carbon $periodStart): bool
+    private function isDueToday(DdPayment $ddPayment, Carbon $today): bool
+    {
+        $anchor = Carbon::parse($ddPayment->payment_date)->startOfDay();
+        $frequency = $ddPayment->frequency ?: 'monthly';
+
+        if ($anchor->gt($today)) {
+            return false;
+        }
+
+        return match ($frequency) {
+            'daily' => true,
+            'weekly' => $anchor->dayOfWeek === $today->dayOfWeek,
+            'fortnightly' => $anchor->diffInDays($today) % 14 === 0,
+            'monthly' => $anchor->day === min($today->day, $today->daysInMonth) || $anchor->day === $today->day,
+            'quarterly' => $anchor->day === $today->day && (($today->month - $anchor->month + 12) % 3 === 0),
+            'half-yearly' => $anchor->day === $today->day && (($today->month - $anchor->month + 12) % 6 === 0),
+            'yearly' => $anchor->isSameDay($today->copy()->setYear($anchor->year)),
+            default => false,
+        };
+    }
+
+    private function nextPaymentDate(Carbon $from, string $frequency): Carbon
+    {
+        return match ($frequency) {
+            'daily' => $from->copy()->addDay(),
+            'weekly' => $from->copy()->addWeek(),
+            'fortnightly' => $from->copy()->addWeeks(2),
+            'quarterly' => $from->copy()->addMonths(3),
+            'half-yearly' => $from->copy()->addMonths(6),
+            'yearly' => $from->copy()->addYear(),
+            default => $from->copy()->addMonth(),
+        };
+    }
+
+    private function receiptExists(DdPayment $ddPayment, Carbon $today): bool
     {
         return Receipt::where('dd_payment_id', $ddPayment->id)
-            ->where('date', '>=', $periodStart)
+            ->whereDate('date', $today->toDateString())
             ->exists();
     }
 }

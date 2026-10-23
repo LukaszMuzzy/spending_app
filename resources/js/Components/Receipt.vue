@@ -1,253 +1,139 @@
 <script setup>
-import {ref} from 'vue'
+import { formatMoney } from '@/utils/money';
+import { ref, watch } from 'vue';
 
-let props = defineProps(['receipt', 'shopping_types', 'payment_methods', 'shops', 'shopping_groups']);
-const emit = defineEmits(['submitEditReceipt']);
+const props = defineProps({
+    receipt: Object,
+    shopping_types: Array,
+    payment_methods: Array,
+    shops: Array,
+    shopping_groups: Array,
+});
 
-console.log(props.receipt)
+const emit = defineEmits(['submitEditReceipt', 'deleteReceipt']);
 
-let isEditing = ref(false);
-let editedReceipt = ref({ ...props.receipt }); // Create a copy for editing
+const isEditing = ref(false);
+const editedReceipt = ref({ ...props.receipt });
 
-const editReceipt = () => {
-  isEditing.value = !isEditing.value; // Toggle editing state
+const inputClass =
+    'block w-full rounded-lg border-border text-sm shadow-sm focus:border-accent focus:ring-accent';
 
-  // Reset editedReceipt to original data on cancel (optional)
-  if (!isEditing) {
+watch(
+    () => props.receipt,
+    (value) => {
+        editedReceipt.value = { ...value };
+    }
+);
+
+function editReceipt() {
+    isEditing.value = true;
     editedReceipt.value = { ...props.receipt };
-  }
-};
-
-const submitEdit = () => {
-  // Handle editing logic (e.g., send updated data to parent)
-  emit('submitEditReceipt', editedReceipt.value);
-
-  // Reset editing state and potentially emit event to parent
-  isEditing.value = false;
-};
-
-const cancelEdit = () => {
-    isEditing.value = false
 }
 
+function cancelEdit() {
+    isEditing.value = false;
+    editedReceipt.value = { ...props.receipt };
+}
 
+function submitEdit() {
+    emit('submitEditReceipt', editedReceipt.value);
+    isEditing.value = false;
+}
+
+function deleteReceipt() {
+    emit('deleteReceipt', props.receipt);
+}
+
+function sourceLabel(source) {
+    return source || 'manual';
+}
 </script>
 
 <template>
-    <tr class="border-b transition duration-300 ease-in-out hover:bg-neutral-100 dark:border-neutral-500 dark:hover:bg-neutral-600">
-      <td
-        v-if="!isEditing"
-        class="whitespace-nowrap px-6 py-4 font-medium"
-      >
-        {{ props.receipt.date }}
-      </td>
-      <td
-        v-else
-        class="whitespace-nowrap px-6 py-4"
-      >
-        <!-- <input v-model="editedReceipt.date" type="text" class="w-full" /> -->
-        <div>
-          <label class="block mx-2 px-3" for="date" name="date">Date:</label>
-          <input
-              type="date"
-              v-model="editedReceipt.date"
-              class=" block
-                      min-w-fit
-                      border-gray-300
-                      focus:border-indigo-300
-                      focus:ring
-                      focus:ring-indigo-200/50
-                      rounded-md
-                      shadow-sm
-                      mx-2"
-          />
-          </div>
-      </td>
-      <td
-        v-if="!isEditing"
-        class="whitespace-nowrap px-6 py-4"
-      >
-        {{ props.receipt.shopping_type.description }}
-      </td>
-      <td
-        v-else
-        class="whitespace-nowrap px-6 py-4"
-      >
-        <!-- <input v-model="editedReceipt.shopping_type.description" type="text" class="w-full" /> -->
-        <div>
-          <label class="block mx-2 px-3" for="shopping_type_id" name="shopping_type_id">Shopping Type:</label>
-          <select  v-model="editedReceipt.shopping_type_id" id="shopping_type_id"
-              class=" block
-                      border-gray-300
-                      focus:border-indigo-300
-                      focus:ring
-                      focus:ring-indigo-200/50
-                      rounded-md
-                      shadow-sm
-                      mx-2">
-          <option disabled value="">Shoping Type</option>
-          <option v-for="shopping_type in props.shopping_types" :value="shopping_type.id">{{ shopping_type.description }}</option>
-          </select>
-      </div>
-      </td>
-      <td
-        v-if="!isEditing"
-        class="whitespace-nowrap px-6 py-4 font-medium"
-      >
-        {{ props.receipt.price }}
-      </td>
-      <td
-        v-else
-        class="whitespace-nowrap px-6 py-4"
-      >
-        <input v-model="editedReceipt.price" type="text" class="w-full" />
-      </td>
-      <td
-        v-if="!isEditing"
-        class="whitespace-nowrap px-6 py-4"
-      >
-        {{ props.receipt.payment_method.name }}
-      </td>
-      <td
-        v-else
-        class="whitespace-nowrap px-6 py-4"
-      >
-      <div>
-        <label class="block mx-2 px-3 w-fit" for="payment_method_id" name="payment_method_id">Payment:</label>
-
-        <select  v-model="editedReceipt.payment_method_id" id="payment_method_id"
-            class=" block
-                    border-gray-300
-                    focus:border-indigo-300
-                    focus:ring
-                    focus:ring-indigo-200/50
-                    rounded-md
-                    shadow-sm
-                    mx-2">
-        <option disabled value="">Payment method</option>
-        <option v-for="payment_method in props.payment_methods" :value="payment_method.id">{{ payment_method.name }}</option>
-        </select>
-    </div>
-      </td>
-
-      <td
-        v-if="!isEditing"
-        class="whitespace-nowrap px-6 py-4 font-medium"
-      >
-        {{ props.receipt.shop.name }}
-      </td>
-      <td
-        v-else
-        class="whitespace-nowrap px-6 py-4"
-      >
-      <div>
-        <label class="block mx-2 px-3 w-fit" for="shop_id" name="shop_id">Shop:</label>
-
-        <select  v-model="editedReceipt.shop_id" id="shop_id"
-            class=" block
-                    border-gray-300
-                    focus:border-indigo-300
-                    focus:ring
-                    focus:ring-indigo-200/50
-                    rounded-md
-                    shadow-sm
-                    mx-2">
-        <option disabled value="">Shop</option>
-        <option v-for="shop in props.shops" :value="shop.id">{{ shop.name }}</option>
-        </select>
-    </div>
-      </td>
-      <td
-        v-if="!isEditing"
-        class="whitespace-nowrap px-6 py-4"
-      >
-        {{ props.receipt.shopping_group.name  }}
-      </td>
-      <td
-        v-else
-        class="whitespace-nowrap px-6 py-4"
-      >
-      <div>
-        <label class="block mx-2 px-3 w-fit" for="shopping_group_id" name="shopping_group_id">Group:</label>
-
-        <select  v-model="editedReceipt.shopping_group_id" id="shopping_group_id"
-            class=" block
-                    border-gray-300
-                    focus:border-indigo-300
-                    focus:ring
-                    focus:ring-indigo-200/50
-                    rounded-md
-                    shadow-sm
-                    mx-2">
-        <option disabled value="">Shoping Group</option>
-        <option v-for="shopping_group in props.shopping_groups" :value="shopping_group.id">{{ shopping_group.name }}</option>
-        </select>
-    </div>
-      </td>
-      <td
-        v-if="!isEditing"
-        class="whitespace-nowrap px-6 py-4 font-medium"
-      >
-        {{ props.receipt.note }}
-      </td>
-      <td
-        v-else
-        class="whitespace-nowrap px-6 py-4"
-      >
-        <input v-model="editedReceipt.note" type="text" class="w-full" />
-      </td>
-      <td
-        class="whitespace-nowrap px-6 py-4"
-      >
-        {{ props.receipt.user.name }}
-      </td>
-      <td class="whitespace-nowrap px-6 py-4">
-        <button
-          @click="editReceipt"
-          v-if="!isEditing"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Edit
-        </button>
-        <button
-          @click="submitEdit"
-          v-else
-          class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Submit
-        </button>
-        <button 
-          @click="delete"
-          v-if="!isEditing"
-          class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-        >
-          Delete
-        </button>
-        <button
-          @click="cancelEdit"
-          v-else
-          class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">
-          Cancel
-        </button>
-      </td>
-
-    </tr>
-  </template>
- 
-<!-- <template>
-    <tr class="border-b transition duration-300 ease-in-out hover:bg-neutral-100 dark:border-neutral-500 dark:hover:bg-neutral-600">
-        <td class="whitespace-nowrap px-6 py-4 font-medium">{{ props.receipt.date }}</td>
-        <td class="whitespace-nowrap px-6 py-4">{{ props.receipt.shopping_type.description }}</td>
-        <td class="whitespace-nowrap px-6 py-4">{{ props.receipt.price }}</td>
-        <td class="whitespace-nowrap px-6 py-4">{{ props.receipt.payment_method.name }}</td>
-        <td class="whitespace-nowrap px-6 py-4">{{ props.receipt.shop.name }}</td>
-        <td class="whitespace-nowrap px-6 py-4">{{ props.receipt.shopping_group.name }}</td>
-        <td class="whitespace-nowrap px-6 py-4">{{ props.receipt.note }}</td>
-        <td class="whitespace-nowrap px-6 py-4">{{ props.receipt.user.name }}</td>
-        <td class="whitespace-nowrap px-6 py-4">
-            <button @click="editReceipt" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Edit</button>
-            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">Delete</button>
+    <tr class="border-b border-border transition hover:bg-surface/60" :class="{ 'bg-warn-soft/40': receipt.needs_review }">
+        <td class="whitespace-nowrap px-4 py-3">
+            <template v-if="!isEditing">{{ receipt.date }}</template>
+            <input v-else v-model="editedReceipt.date" type="date" :class="inputClass" />
         </td>
-
+        <td class="whitespace-nowrap px-4 py-3">
+            <template v-if="!isEditing">{{ receipt.shopping_type?.description }}</template>
+            <select v-else v-model="editedReceipt.shopping_type_id" :class="inputClass">
+                <option v-for="type in shopping_types" :key="type.id" :value="type.id">{{ type.description }}</option>
+            </select>
+        </td>
+        <td class="whitespace-nowrap px-4 py-3 font-medium">
+            <template v-if="!isEditing">{{ formatMoney(receipt.price) }}</template>
+            <input v-else v-model="editedReceipt.price" type="number" step="0.01" :class="inputClass" />
+        </td>
+        <td class="whitespace-nowrap px-4 py-3">
+            <template v-if="!isEditing">{{ receipt.payment_method?.name }}</template>
+            <select v-else v-model="editedReceipt.payment_method_id" :class="inputClass">
+                <option v-for="method in payment_methods" :key="method.id" :value="method.id">{{ method.name }}</option>
+            </select>
+        </td>
+        <td class="whitespace-nowrap px-4 py-3">
+            <template v-if="!isEditing">{{ receipt.shop?.name }}</template>
+            <select v-else v-model="editedReceipt.shop_id" :class="inputClass">
+                <option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option>
+            </select>
+        </td>
+        <td class="whitespace-nowrap px-4 py-3">
+            <template v-if="!isEditing">{{ receipt.shopping_group?.name }}</template>
+            <select v-else v-model="editedReceipt.shopping_group_id" :class="inputClass">
+                <option v-for="group in shopping_groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+            </select>
+        </td>
+        <td class="px-4 py-3">
+            <template v-if="!isEditing">{{ receipt.note }}</template>
+            <input v-else v-model="editedReceipt.note" type="text" :class="inputClass" />
+        </td>
+        <td class="whitespace-nowrap px-4 py-3">
+            <span class="rounded-full bg-surface px-2 py-1 text-xs font-medium capitalize text-ink-muted">
+                {{ sourceLabel(receipt.source) }}
+            </span>
+            <span
+                v-if="receipt.needs_review"
+                class="ml-1 rounded-full bg-warn-soft px-2 py-1 text-xs font-medium text-warn"
+            >
+                review
+            </span>
+        </td>
+        <td class="whitespace-nowrap px-4 py-3 text-ink-muted">{{ receipt.user?.name }}</td>
+        <td class="whitespace-nowrap px-4 py-3">
+            <div class="flex gap-2">
+                <button
+                    v-if="!isEditing"
+                    type="button"
+                    class="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white"
+                    @click="editReceipt"
+                >
+                    Edit
+                </button>
+                <button
+                    v-else
+                    type="button"
+                    class="rounded-lg bg-good px-3 py-1.5 text-xs font-semibold text-white"
+                    @click="submitEdit"
+                >
+                    Save
+                </button>
+                <button
+                    v-if="!isEditing"
+                    type="button"
+                    class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white"
+                    @click="deleteReceipt"
+                >
+                    Delete
+                </button>
+                <button
+                    v-else
+                    type="button"
+                    class="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-ink"
+                    @click="cancelEdit"
+                >
+                    Cancel
+                </button>
+            </div>
+        </td>
     </tr>
-</template> -->
+</template>

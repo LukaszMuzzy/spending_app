@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DdPayment extends Model
@@ -20,37 +21,32 @@ class DdPayment extends Model
         'shop_id',
         'payment_method_id',
         'shopping_type_id',
-        'price'
+        'price',
     ];
 
-    /**
-     * Get the shopping group associated with the payment.
-     */
-    public function shoppingGroup()
+    protected $casts = [
+        'payment_date' => 'date:Y-m-d',
+        'end_date' => 'date:Y-m-d',
+        'is_active' => 'boolean',
+        'price' => 'float',
+    ];
+
+    public function shoppingGroup(): BelongsTo
     {
         return $this->belongsTo(ShoppingGroup::class);
     }
 
-    /**
-     * Get the shop associated with the payment.
-     */
-    public function shop()
+    public function shop(): BelongsTo
     {
         return $this->belongsTo(Shop::class);
     }
 
-    /**
-     * Get the payment method associated with the payment.
-     */
-    public function paymentMethod()
+    public function paymentMethod(): BelongsTo
     {
         return $this->belongsTo(PaymentMethod::class);
     }
 
-    /**
-     * Get the shopping type associated with the payment.
-     */
-    public function shoppingType()
+    public function shoppingType(): BelongsTo
     {
         return $this->belongsTo(ShoppingType::class);
     }

@@ -59,4 +59,19 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(PaymentMethod::class,'payment_method_user', 'user_id', 'payment_method_id');
     }
+
+    public function incomes(): HasMany
+    {
+        return $this->hasMany(Income::class);
+    }
+
+    public function bankConnections(): HasMany
+    {
+        return $this->hasMany(BankConnection::class);
+    }
+
+    public function shoppingGroupIds(): array
+    {
+        return $this->shopping_groups()->pluck('shopping_groups.id')->all();
+    }
 }

@@ -31,4 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'enablebanking' => [
+        'app_id' => env('ENABLEBANKING_APP_ID'),
+        'private_key' => env('ENABLEBANKING_PRIVATE_KEY'),
+        'base_url' => env('ENABLEBANKING_BASE_URL', 'https://api.enablebanking.com'),
+        'country' => env('ENABLEBANKING_COUNTRY', 'GB'),
+    ],
+
 ];

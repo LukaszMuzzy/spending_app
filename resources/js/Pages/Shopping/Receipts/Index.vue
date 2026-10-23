@@ -1,15 +1,28 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 import InputError from '@/Components/InputError.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import Receipt from '@/Components/Receipt.vue';
-import { useForm, Head } from '@inertiajs/vue3';
+import ReceiptRow from '@/Components/Receipt.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
-import {ref} from 'vue';
- 
-const props = defineProps(['receipts', 'shopping_types', 'payment_methods', 'shops', 'shopping_groups']);
+import { ref, watch } from 'vue';
 
-let currentReceipts = ref(props.receipts);
+const props = defineProps({
+    receipts: Object,
+    filters: Object,
+    shopping_types: Array,
+    payment_methods: Array,
+    shops: Array,
+    shopping_groups: Array,
+    inbox_count: Number,
+});
+
+const inputClass =
+    'block w-full rounded-xl border-border shadow-sm focus:border-accent focus:ring-accent';
 
 const form = useForm({
     shopping_type_id: '',
@@ -18,224 +31,220 @@ const form = useForm({
     price: null,
     note: '',
     date: dayjs().format('YYYY-MM-DD'),
-    shopping_group_id: ''
+    shopping_group_id: '',
 });
 
+const localFilters = ref({ ...props.filters });
 
-function handleEditReceipt(editedReciept) {
-    console.log('Edit Parent')
-    console.log(editedReciept);
-    const originalReceipt = currentReceipts.value.find( receipt => receipt.id === editedReciept.id)
-    const url = route('receipts.update', {receipt: editedReciept.id})
-
-    const editedReceiptForm = useForm({
-        shopping_type_id: editedReciept.shopping_type_id,
-        payment_method_id: editedReciept.payment_method_id,
-        shop_id: editedReciept.shop_id,
-        price: editedReciept.price,
-        note: editedReciept.note,
-        date: dayjs(editedReciept.date).format('YYYY-MM-DD'),
-        shopping_group_id: editedReciept.shopping_group_id
-    });
-
-
-    let isEdited = async () => {
-
-        editedReceiptForm.put(url, {
-            onSuccess: () => editedReceiptForm.reset()
-        })
+watch(
+    () => props.filters,
+    (value) => {
+        localFilters.value = { ...value };
     }
-    isEdited();
+);
+
+function applyFilters() {
+    router.get(
+        route('receipts.index'),
+        {
+            search: localFilters.value.search || undefined,
+            month: localFilters.value.month || undefined,
+            shopping_type_id: localFilters.value.shopping_type_id || undefined,
+            shopping_group_id: localFilters.value.shopping_group_id || undefined,
+            needs_review: localFilters.value.needs_review ? 1 : undefined,
+        },
+        { preserveState: true, replace: true }
+    );
 }
 
+function handleEditReceipt(editedReceipt) {
+    const editedReceiptForm = useForm({
+        shopping_type_id: editedReceipt.shopping_type_id,
+        payment_method_id: editedReceipt.payment_method_id,
+        shop_id: editedReceipt.shop_id,
+        price: editedReceipt.price,
+        note: editedReceipt.note,
+        date: dayjs(editedReceipt.date).format('YYYY-MM-DD'),
+        shopping_group_id: editedReceipt.shopping_group_id,
+    });
 
+    editedReceiptForm.put(route('receipts.update', editedReceipt.id));
+}
 
-
+function handleDeleteReceipt(receipt) {
+    if (confirm('Delete this receipt?')) {
+        router.delete(route('receipts.destroy', receipt.id));
+    }
+}
 </script>
- 
+
 <template>
-    <Head title="Receipts" />
- 
+    <Head title="Spending" />
+
     <AuthenticatedLayout>
-        <div class="mx-auto p-4 sm:p-6 lg:p-8">
-            <form @submit.prevent="form.post(route('receipts.store'), { onSuccess: () => form.reset() })">
-                <div class="flex flex-wrap justify-between items-center">
-                    
-                    <div>
+        <PageHeader
+            title="Spending"
+            description="Add receipts, filter by month or category, and review bank imports waiting for a category."
+        >
+            <template #actions>
+                <Link
+                    v-if="inbox_count"
+                    :href="route('receipts.index', { needs_review: 1 })"
+                    class="rounded-xl border border-warn bg-warn-soft px-4 py-2.5 text-sm font-semibold text-warn"
+                >
+                    {{ inbox_count }} need review
+                </Link>
+                <Link
+                    :href="route('imports.index')"
+                    class="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-ink"
+                >
+                    Import CSV
+                </Link>
+            </template>
+        </PageHeader>
 
-                        <label class="block mx-2 px-3" for="date" name="date">Date:</label>
-                        <input
-                            type="date"
-                            v-model="form.date"
-                            id="date"
-                            class=" block
-                                    min-w-fit
-                                    border-gray-300
-                                    focus:border-indigo-300
-                                    focus:ring
-                                    focus:ring-indigo-200/50
-                                    rounded-md
-                                    shadow-sm
-                                    mx-2"
-                        />
-                    </div>
-                    <div>
-                        <label class="block mx-2 px-3" for="shopping_type_id" name="shopping_type_id">Shopping Type:</label>
-                        <select  v-model="form.shopping_type_id" id="shopping_type_id"
-                            class=" block
-                                    border-gray-300
-                                    focus:border-indigo-300
-                                    focus:ring
-                                    focus:ring-indigo-200/50
-                                    rounded-md
-                                    shadow-sm
-                                    mx-2">
-                        <option disabled value="">Shoping Type</option>
-                        <option v-for="shopping_type in shopping_types" :value="shopping_type.id">{{ shopping_type.description }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block mx-2 px-3" for="price" name="price">Price:</label>
-
-                        <input
-                            type="number"
-                            id="price"
-                            v-model="form.price"
-                            step=".01"
-                            placeholder="£0.00"
-                            class=" block
-                                    border-gray-300
-                                    focus:border-indigo-300
-                                    focus:ring
-                                    focus:ring-indigo-200/50
-                                    rounded-md
-                                    shadow-sm
-                                    h-fit
-                                    mx-2"
-                        />
-                    </div>
-
-                    <div>
-                        <label class="block mx-2 px-3 w-fit" for="payment_method_id" name="payment_method_id">Payment:</label>
-
-                        <select  v-model="form.payment_method_id" id="payment_method_id"
-                            class=" block
-                                    border-gray-300
-                                    focus:border-indigo-300
-                                    focus:ring
-                                    focus:ring-indigo-200/50
-                                    rounded-md
-                                    shadow-sm
-                                    mx-2">
-                        <option disabled value="">Payment method</option>
-                        <option v-for="payment_method in payment_methods" :value="payment_method.id">{{ payment_method.name }}</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block mx-2 px-3 w-fit" for="shop_id" name="shop_id">Shop:</label>
-
-                        <select  v-model="form.shop_id" id="shop_id"
-                            class=" block
-                                    border-gray-300
-                                    focus:border-indigo-300
-                                    focus:ring
-                                    focus:ring-indigo-200/50
-                                    rounded-md
-                                    shadow-sm
-                                    mx-2">
-                        <option disabled value="">Shop</option>
-                        <option v-for="shop in shops" :value="shop.id">{{ shop.name }}</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block mx-2 px-3 w-fit" for="shopping_group_id" name="shopping_group_id">Group:</label>
-
-                        <select  v-model="form.shopping_group_id" id="shopping_group_id"
-                            class=" block
-                                    border-gray-300
-                                    focus:border-indigo-300
-                                    focus:ring
-                                    focus:ring-indigo-200/50
-                                    rounded-md
-                                    shadow-sm
-                                    mx-2">
-                        <option disabled value="">Shoping Group</option>
-                        <option v-for="shopping_group in shopping_groups" :value="shopping_group.id">{{ shopping_group.name }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block mx-2 px-3 w-fit" for="note" name="note">Notes:</label>
-
-                        <input
-                            type="text"
-                            id="note"
-                            v-model="form.note"
-                            placeholder="Notes"
-                            class=" block
-                                    border-gray-300Update Google Calendar API
-                                    
-                                    
-                                    focus:border-indigo-300
-                                    focus:ring
-                                    focus:ring-indigo-200/50
-                                    rounded-md
-                                    shadow-sm
-                                    h-fit
-                                    mx-2"
-                        />
-
-                    </div>
-
-                    <InputError :message="form.errors.message" class="mt-2" />
-                    
+        <Card>
+            <h2 class="text-lg font-semibold text-ink">Add receipt</h2>
+            <form
+                class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                @submit.prevent="form.post(route('receipts.store'), { onSuccess: () => form.reset('price', 'note') })"
+            >
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-ink">Date</label>
+                    <input v-model="form.date" type="date" :class="inputClass" required />
+                    <InputError :message="form.errors.date" class="mt-1" />
                 </div>
-                <div class="flex justify-end">
-                    <PrimaryButton class="mt-4">Add</PrimaryButton>                    
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-ink">Category</label>
+                    <select v-model="form.shopping_type_id" :class="inputClass" required>
+                        <option disabled value="">Select category</option>
+                        <option v-for="type in shopping_types" :key="type.id" :value="type.id">
+                            {{ type.description }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.shopping_type_id" class="mt-1" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-ink">Amount</label>
+                    <input v-model="form.price" type="number" step="0.01" min="0" placeholder="0.00" :class="inputClass" required />
+                    <InputError :message="form.errors.price" class="mt-1" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-ink">Payment method</label>
+                    <select v-model="form.payment_method_id" :class="inputClass" required>
+                        <option disabled value="">Select payment</option>
+                        <option v-for="method in payment_methods" :key="method.id" :value="method.id">
+                            {{ method.name }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.payment_method_id" class="mt-1" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-ink">Shop</label>
+                    <select v-model="form.shop_id" :class="inputClass" required>
+                        <option disabled value="">Select shop</option>
+                        <option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option>
+                    </select>
+                    <InputError :message="form.errors.shop_id" class="mt-1" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-ink">Group</label>
+                    <select v-model="form.shopping_group_id" :class="inputClass" required>
+                        <option disabled value="">Select group</option>
+                        <option v-for="group in shopping_groups" :key="group.id" :value="group.id">
+                            {{ group.name }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.shopping_group_id" class="mt-1" />
+                </div>
+                <div class="sm:col-span-2 lg:col-span-3">
+                    <label class="mb-1 block text-sm font-medium text-ink">Notes</label>
+                    <input v-model="form.note" type="text" placeholder="Optional note" :class="inputClass" />
+                    <InputError :message="form.errors.note" class="mt-1" />
+                </div>
+                <div>
+                    <PrimaryButton :disabled="form.processing">Add receipt</PrimaryButton>
                 </div>
             </form>
+        </Card>
 
-            <div class="mt-6 bg-white shadow-sm rounded-lg divide-y">
-                <div class="flex flex-col">
-        <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-                <div class="overflow-hidden">
-                    <table class="min-w-full text-left text-sm font-light">
-                    <thead class="border-b font-medium dark:border-neutral-500">
+        <Card class="mt-6" :padding="false">
+            <div class="border-b border-border p-5 sm:p-6">
+                <h2 class="text-lg font-semibold text-ink">Receipts</h2>
+                <form class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" @submit.prevent="applyFilters">
+                    <input v-model="localFilters.search" type="search" placeholder="Search notes or shops" :class="inputClass" />
+                    <input v-model="localFilters.month" type="month" :class="inputClass" />
+                    <select v-model="localFilters.shopping_type_id" :class="inputClass">
+                        <option value="">All categories</option>
+                        <option v-for="type in shopping_types" :key="type.id" :value="type.id">
+                            {{ type.description }}
+                        </option>
+                    </select>
+                    <select v-model="localFilters.shopping_group_id" :class="inputClass">
+                        <option value="">All groups</option>
+                        <option v-for="group in shopping_groups" :key="group.id" :value="group.id">
+                            {{ group.name }}
+                        </option>
+                    </select>
+                    <div class="flex items-center gap-2">
+                        <label class="flex items-center gap-2 text-sm text-ink">
+                            <input v-model="localFilters.needs_review" type="checkbox" class="rounded border-border text-accent focus:ring-accent" />
+                            Needs review
+                        </label>
+                        <SecondaryButton type="submit">Filter</SecondaryButton>
+                    </div>
+                </form>
+            </div>
+
+            <div v-if="receipts.data?.length" class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="border-b border-border bg-surface/70 text-ink-muted">
                         <tr>
-                        <th scope="col" class="px-6 py-4">Date</th>
-                        <th scope="col" class="px-6 py-4">Shopping Type</th>
-                        <th scope="col" class="px-6 py-4">Price</th>
-                        <th scope="col" class="px-6 py-4">Payment Method</th>
-                        <th scope="col" class="px-6 py-4">Shop</th>
-                        <th scope="col" class="px-6 py-4">Shopping Group</th>
-                        <th scope="col" class="px-6 py-4">Note</th>
-                        <th scope="col" class="px-6 py-4">Added By</th>
-                        <th scope="col" class="px-6 py-4">Actions</th>
+                            <th class="px-4 py-3 font-medium">Date</th>
+                            <th class="px-4 py-3 font-medium">Category</th>
+                            <th class="px-4 py-3 font-medium">Amount</th>
+                            <th class="px-4 py-3 font-medium">Payment</th>
+                            <th class="px-4 py-3 font-medium">Shop</th>
+                            <th class="px-4 py-3 font-medium">Group</th>
+                            <th class="px-4 py-3 font-medium">Note</th>
+                            <th class="px-4 py-3 font-medium">Source</th>
+                            <th class="px-4 py-3 font-medium">By</th>
+                            <th class="px-4 py-3 font-medium">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <Receipt
-                            v-for="receipt in receipts"
+                        <ReceiptRow
+                            v-for="receipt in receipts.data"
                             :key="receipt.id"
                             :receipt="receipt"
-                            @submitEditReceipt="handleEditReceipt"
                             :shopping_types="shopping_types"
                             :payment_methods="payment_methods"
                             :shops="shops"
                             :shopping_groups="shopping_groups"
-                            
+                            @submit-edit-receipt="handleEditReceipt"
+                            @delete-receipt="handleDeleteReceipt"
                         />
-
                     </tbody>
-                    </table>
-                </div>
+                </table>
             </div>
-        </div>
-    </div>
- 
+            <EmptyState
+                v-else
+                class="m-6"
+                title="No receipts match"
+                description="Try another month, or add your first receipt above."
+            />
+
+            <div v-if="receipts.links?.length > 3" class="flex flex-wrap gap-2 border-t border-border p-4">
+                <Link
+                    v-for="link in receipts.links"
+                    :key="link.label"
+                    :href="link.url || '#'"
+                    class="rounded-lg px-3 py-1.5 text-sm"
+                    :class="link.active ? 'bg-accent text-white' : 'bg-surface text-ink-muted'"
+                    v-html="link.label"
+                    preserve-scroll
+                />
             </div>
-        </div>
+        </Card>
     </AuthenticatedLayout>
 </template>

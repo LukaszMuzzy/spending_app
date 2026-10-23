@@ -1,90 +1,29 @@
 <?php
 
+use App\Http\Controllers\BankController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DdPaymentController;
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\ShopController;
-use App\Http\Controllers\ShoppingTypeController;
 use App\Http\Controllers\ShoppingGroupController;
-use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\DdPaymentController;
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\ShoppingTypeController;
 use Illuminate\Support\Facades\Route;
-use App\Models\User;
-use App\Models\Receipt;
 use Inertia\Inertia;
-use Carbon\Carbon;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        // 'canRegister' => Route::has('register'),
-        // 'laravelVersion' => Application::VERSION,
-        // 'phpVersion' => PHP_VERSION,
+        'canRegister' => Route::has('register'),
     ]);
 });
 
-Route::get('/dashboard', function () {
-
-    $currentMonthStart = Carbon::now()->copy();
-    $currentMonthEnd = Carbon::now()->copy()->endOfMonth();
-
-    $users = User::with(['shopping_groups'])->where('id',Auth::user()->id)->get();
-    $userShopingGroupsIds = [];
-
-    foreach($users as $user){
-        $shoppingGroups = $user->shopping_groups;
-        foreach($shoppingGroups as $shoppingGroup){
-            $userShopingGroupsIds[] = $shoppingGroup->id;
-        }
-
-    }
-
-    $monthsArray = ['total', 'total1', 'total3'];
-
-    $totals = [];
-
-    foreach ($monthsArray as $k => $v){
-        $starOfMonth = $currentMonthStart->copy()->subMonth($k)->startOfMonth();
-        $endOfMonth = $currentMonthEnd->copy()->subMonth($k)->endOfMonth();
-        $totals[$v] = Receipt::whereIn('shopping_group_id', $userShopingGroupsIds)
-                                ->whereBetween('date', [$starOfMonth, $endOfMonth])
-                                ->sum('price');
-    }
-
-
-    $starOfMonth = $currentMonthStart->copy()->startOfMonth();
-    $endOfMonth = $currentMonthEnd->copy()->endOfMonth();
-
-    $test = $starOfMonth->toDateString();
-    $test2 = 0;
-
-    return Inertia::render('Dashboard',
-[
-    'totalByGroup' => Receipt::select('shopping_type_id', \DB::raw('SUM(price) as total_price'))
-                    ->whereBetween('date', [$starOfMonth, $endOfMonth])
-                    ->with(['shopping_type'])
-                    ->groupBy('shopping_type_id')
-                    ->whereIn('shopping_group_id', $userShopingGroupsIds)
-                    ->orderBy('total_price', 'desc')
-                    ->get(),
-    'total' => $totals['total'],
-    'total1' =>$totals['total1'],
-    'total2' =>$totals['total3'],
-    'start_date' => $starOfMonth->toDateString(),
-    'end_date' => $endOfMonth->toDateString()
-]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -92,36 +31,41 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/test', function () {
-    return Inertia::render('Public/Home', [
-        'laravel' => \Illuminate\Foundation\Application::VERSION,
-        'php' => PHP_VERSION,
-        'test' => 'Tester'
-    ]);
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('receipts', ReceiptController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+
+    Route::resource('shops', ShopController::class)
+        ->only(['index', 'store']);
+
+    Route::resource('shopping_types', ShoppingTypeController::class)
+        ->only(['index', 'store']);
+
+    Route::resource('shopping_groups', ShoppingGroupController::class)
+        ->only(['index', 'store']);
+
+    Route::resource('payment_methods', PaymentMethodController::class)
+        ->only(['index', 'store']);
+
+    Route::resource('dd_payments', DdPaymentController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+
+    Route::get('/plan', [PlanController::class, 'index'])->name('plan.index');
+    Route::post('/plan/budgets', [PlanController::class, 'storeBudget'])->name('plan.budgets.store');
+    Route::delete('/plan/budgets/{budget}', [PlanController::class, 'destroyBudget'])->name('plan.budgets.destroy');
+    Route::post('/plan/incomes', [PlanController::class, 'storeIncome'])->name('plan.incomes.store');
+    Route::put('/plan/incomes/{income}', [PlanController::class, 'updateIncome'])->name('plan.incomes.update');
+    Route::delete('/plan/incomes/{income}', [PlanController::class, 'destroyIncome'])->name('plan.incomes.destroy');
+
+    Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');
+    Route::post('/imports/preview', [ImportController::class, 'preview'])->name('imports.preview');
+    Route::post('/imports', [ImportController::class, 'store'])->name('imports.store');
+
+    Route::get('/bank', [BankController::class, 'index'])->name('bank.index');
+    Route::post('/bank/connect', [BankController::class, 'connect'])->name('bank.connect');
+    Route::get('/bank/callback', [BankController::class, 'callback'])->name('bank.callback');
+    Route::post('/bank/sync', [BankController::class, 'sync'])->name('bank.sync');
+    Route::delete('/bank', [BankController::class, 'disconnect'])->name('bank.disconnect');
 });
-
-Route::resource('receipts', ReceiptController::class)
-    ->only(['index', 'store', 'update', 'edit'])
-    ->middleware(['auth', 'verified']);
-
-Route::resource('shops', ShopController::class)
-    ->only(['index', 'store'])
-    ->middleware(['auth', 'verified']);
-
-Route::resource('shopping_types', ShoppingTypeController::class)
-    ->only(['index', 'store'])
-    ->middleware(['auth', 'verified']);
-
-Route::resource('shopping_groups', ShoppingGroupController::class)
-    ->only(['index', 'store'])
-    ->middleware(['auth', 'verified']);
-
-Route::resource('payment_methods', PaymentMethodController::class)
-    ->only(['index', 'store'])
-    ->middleware(['auth', 'verified']);
-
-Route::resource('dd_payments', DdPaymentController::class)
-    ->only(['index', 'store', 'show', 'update', 'destroy'])
-    ->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';

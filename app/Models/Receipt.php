@@ -19,7 +19,16 @@ class Receipt extends Model
         'date',
         'shopping_group_id',
         'user_id',
-        'dd_payment_id'
+        'dd_payment_id',
+        'source',
+        'external_id',
+        'needs_review',
+    ];
+
+    protected $casts = [
+        'price' => 'float',
+        'date' => 'date:Y-m-d',
+        'needs_review' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -51,5 +60,4 @@ class Receipt extends Model
     {
         return $this->belongsTo(DdPayment::class);
     }
-
 }
