@@ -34,12 +34,12 @@ const props = defineProps(['dd_payments', 'shopping_groups', 'shops', 'payment_m
                             type="text"
                             v-model="form.name"
                             placeholder="Payment Name"
-                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         />
 
                         <select
                             v-model="form.shopping_group_id"
-                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         >
                             <option value="" disabled>Select Shopping Group</option>
                             <option v-for="group in shopping_groups" :key="group.id" :value="group.id">{{ group.name }}</option>
@@ -51,21 +51,21 @@ const props = defineProps(['dd_payments', 'shopping_groups', 'shops', 'payment_m
                             type="date"
                             v-model="form.payment_date"
                             placeholder="Start Date"
-                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         />
 
                         <input
                             type="date"
                             v-model="form.end_date"
                             placeholder="End Date"
-                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         />
                     </div>
 
                     <div class="flex space-x-4">
                         <select
                             v-model="form.frequency"
-                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         >
                             <option value="" disabled>Select Frequency</option>
                             <option value="daily">Daily</option>
@@ -81,14 +81,14 @@ const props = defineProps(['dd_payments', 'shopping_groups', 'shops', 'payment_m
                             type="float"
                             v-model="form.price"
                             placeholder="Price"
-                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/2 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         />
                     </div>
 
                     <div class="flex space-x-4">
                         <select
                             v-model="form.shop_id"
-                            class="block w-1/3 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/3 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         >
                             <option value="" disabled>Select Shop</option>
                             <option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option>
@@ -96,7 +96,7 @@ const props = defineProps(['dd_payments', 'shopping_groups', 'shops', 'payment_m
 
                         <select
                             v-model="form.payment_method_id"
-                            class="block w-1/3 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/3 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         >
                             <option value="" disabled>Select Payment Method</option>
                             <option v-for="paymentMethod in payment_methods" :key="paymentMethod.id" :value="paymentMethod.id">{{ paymentMethod.name }}</option>
@@ -104,7 +104,7 @@ const props = defineProps(['dd_payments', 'shopping_groups', 'shops', 'payment_m
 
                         <select
                             v-model="form.shopping_type_id"
-                            class="block w-1/3 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                            class="block w-1/3 border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200/50 rounded-md shadow-sm"
                         >
                             <option value="" disabled>Select Shopping Type</option>
                             <option v-for="shoppingType in shopping_types" :key="shoppingType.id" :value="shoppingType.id">{{ shoppingType.description }}</option>
